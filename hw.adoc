@@ -1,4 +1,258 @@
 = PAP
+:author: Chakka Karthik Subramanyam
+:doctype: article
 
-== Introduction
+== Why do we need parallel computing?
 
+Some of motivations towards exploring parallel computing solutions are:
+
+* Computation
+** There could be large number of iterations
+** The algorithm may take a too long of a time to converge
+* Data
+** The memory consumed maybe too large than what can be accommodated by conventional PC RAM.
+** Output can be too big and may take forever to save/transfer.
+
+Moreover, a *big* application can hoard all the resources and cause other applications running on the machine to starve.
+
+Thanks to Moore's law, the conventional wisdom, suggested to wait for newer generation of processors to get more processing power.
+However, we have reached a point, wherein we can't get more processing power by just increasing frequency, so manufacturers are pushed to increase the number of cores, to derive processing power.
+Hence, the need to have exposure into parallel computing is more now than ever before.
+
+Parallel computing though is the way forward, it's not a magic solution. It comes with it's own range of caveats and problems.
+For example,
+
+* How will you divide the data between units?
+* How to distribute data to each of the units?
+* How are the dependencies between data/results handled?
+* How to synchronize various parallel units?
+* How reconstruction of the results of individual units occur?
+* How will you modify your conventional(serial) algorithms to exploit parallelism? etc.
+
+With the advent of big data and IOT, parallel computing has an ever increasing number of applications in various domains in industry and research.
+For ex:
+
+* Data analysis
+* Numerical simulations
+* AI
+* Graphics and motion pictures etc.
+
+The people who are working in this domain to provide foundations for much of the applications described above are the unsung heroes who have made all these possible!
+
+Parallelism is not restricted just to multiple processors running on a chip, it can happen at multiple levels:
+
+* Between Instructions/Data on a single core
+* Processors on a single chip
+* Machines/Cluster of machines on a network
+* Custom hardware
+
+There can also be hybrid solutions that can mix and match various architectures mentioned above.
+
+In the following section, we'll see a simple case of sorting done across various paradigms.
+
+== Parallel Sorting Algorithms
+
+Any sorting problem, can be represented as:
+
+latexmath:[X = \{ x_1, x_2, .... , x_n \}]
+
+set of n real numbers stored in an array of:
+
+latexmath:[X[ \] = X[0\], X[1\], .... , X[n-1\]]
+
+For *n* elements, there are *n!* ways that they can be arranged.
+The goal is to find 1 permutation out of the *n!* that abides to our desired order.
+
+Below is the time complexity(Big O) of some of the conventional sequential sorting algorithms.
+|===
+|Name |Complexity(O(..)) |Comments
+
+|Bubblesort
+|n^2^
+|Propagates the largest element towards the end of the array in each iteration
+
+|Quicksort
+|n log~2~(n)
+|Recursive algorithm that sorts across a randomly chosen pivot
+
+|Mergesort
+|n log~2~(n)
+|Divide and conquer algorithm that divides the array into smallest terminal units, and merges them back while sorting
+
+|===
+
+In the following sections we introduce various parallel sorting algorithms which are either modifications on the classical ones or unique to parallel paradigm.
+We theoretically, evaluate the performance gains for each.
+Some of the assumptions that we make:
+
+* For *P* processes, all data are already allocated and can be denoted by
+* All data are to be sorted in ascending order
+* The number of processes *P*, is in powers of 2.
+
+It's important to note that the best possible for a serial algorithm is:
+
+latexmath:[O\left( n log_2(n) \right)]
+
+for a parallelized algorithm it's:
+
+latexmath:[O\left( log_2(n) \right)]
+
+Thanks to parallelization we can reduce the complexity by a factor of latexmath:[n].
+This holds true no matter how much units of latexmath:[n] we use.
+
+In fact, practically, in our lab sessions have seen that we need to have proper balance between latexmath:[n] and latexmath:[P].
+If we put too many processes, then much of time will be lost in synchronization and co-ordination of various processes, in worst cases we are better off using a serial algorithm.
+If we use too less, then we are not exploiting the full potential of available resources.
+
+Hence, it's all about finding that "sweet" spot.
+
+=== Parallel Merge Sort
+This is quite similar to the sequential merge sort. The tree structure of the algorithm, makes the distribution of the work between processes fairly simple.
+This is illustrated in the figure below footnote:[source: https://www.dcc.fc.up.pt/~ricroc/aulas/1516/cp/apontamentos/slides_sorting.pdf]:
+
+image::./pmsort.png[]
+
+==== Complexity analysis
+
+For any merge sort, in the worst case:
+
+* Number of steps to sort a sublist
++
+latexmath:[2s - 1]
++
+where s is the size of the sublist:
++
+latexmath:[s = 2^{i-1}]
++
+where i is the i^th^ iteration.
+
+* At any given step, number of sub-lists:
++
+asciimath:[(n/s) = (n/2^(i-1))]
++
+where n is the total number of elements
+
+* Number of steps in total:
++
+latexmath:[log_2(n)]
+
+In serial merge sort the time complexity for i^th^ step is:
+
+latexmath:[ O\left( (\frac{n}{2^i}) (2^i - 1) \right) = O\left( n \right)]
+
+Whereas in parallel merge sort the the time complexity for i^th^ step is:
+
+latexmath:[ O\left( 2^i - 1 \right) = O\left(2^i\right)]
+
+We can clearly see that without parallelization, the time remains constant but proportional to size of initial array.
+But, with parallelization, we have reduced the time, now it's in proportion to the subarray size.
+This is because, at any given step all the latexmath:[( \frac{n}{2s})] sub-lists are processed in parallel.
+Hence, complexity of Parallel merge sort:
+
+latexmath:[O\left( \sum_{i=1}^{log_2(n)}( 2^i ) \right) = O(n)]
+
+Therefore, we see a huge gain, wherein a relatively complex operation such as sorting is reduced to time complexity of a simpler operation such as, for example, say linear search.
+
+=== Parallel Bubble Sort
+
+A classic serial bubble sort sort the array by iteratively moving elements to their respective positions in relation to the end of the in each phase.
+
+In parallel bubble sort the idea is to overlap multiple phases in such a way that the newly started phase doesn't disturb an on-going phase.
+Considering the sequence of bubble sort, to achieve this, we need to pipeline the sort in the following manner footnote:[source: Clayton S Ferner, UNC Wilmington, Barry Wilkinson, UNC Charlotte]:
+
+image::pbub.png[]
+
+==== Complexity analysis
+In serial bubble sort, latexmath:[i^{th}] phase requires latexmath:[n - i] iterations and we'll have latexmath:[n - 1] such phases.
+Hence, we have time complexity:
+
+latexmath:[O\left( \sum_{i=1}^{n-1} n - i \right) = O\left( \frac{n(n-1)}{2}\right) = O\left( n^2\right)]
+
+Now, thanks to parallelization, though each phase will take same time as in serial version, the end time will vary due to pipelining.
+Consequently, latexmath:[i^{th}] phase will end at time:
+
+latexmath:[n - 1 + i]
+
+Hence, the end time of the algorithm and hence complexity is:
+
+latexmath:[O\left( n - 1 + n - 1 \right) = O\left( 2n - 2 \right) = O\left( n \right)]
+
+Hence, we have reduce complexity from latexmath:[n^2] to latexmath:[n].
+
+=== Parallel Sort Regular Sampling
+
+In this algorithm we can relax our last initial assumption.
+Now latexmath:[P] need not be in powers of 2, it can be any arbitrary natural number.
+The algorithm is as follows:
+
+* Sort local array using any algorithm.
+If this algorithm is run on distributed network using let's say MPI, by using framework like OpenMP for local sorting higher throughput can be achieved.
+
+* Sample P elements at intervals:
++
+latexmath:[0, \frac{n}{P^2}, \frac{2n}{P^2}, ..., \frac{(P-1)n}{P^2}]
+
+* Gather all these samples in another process and latexmath:[P-1] pivots and broadcast them to all the processes
+
+* All processes partition their local array into latexmath:[P] pieces based on these pivots.
+
+* Now each process latexmath:[P_i] retains the latexmath:[i^{th}] partition and sends it's latexmath:[j^{th}] partition to process latexmath:[P_i \forall j \neq i]
+
+To illustrate with an example footnote:[source: Introduction to HPC with MPI for Data Science by Frank Nielsen]:
+
+image::psrs.png[]
+
+In short, the intuition is: Sort locally and strategically share with each other parts of locally sorted array using some reference pivots selected among sorted samples.
+
+==== Complexity Analysis
+* Cost of local computations
+** Local sort(assuming some efficient sequential algorithm was used):
++
+latexmath:[O\left( \frac{n}{P} log_2(\frac{n}{P}) \right)]
+** Sorting regular samples in intermediate step:
++
+latexmath:[O\left( P^2 log_2(P^2) \right) = O\left( P^2 log_2(P) \right)]
+** Merging sublists:
++
+latexmath:[O\left( \frac{n}{P} log_2(P) \right)]
+* Communication cost
+** Gathering sample and broadcasting pivots:
++
+latexmath:[\approx O\left( 1 \right)]
+** Total exchange in the last step:
++
+latexmath:[O\left( \frac{n}{P} \right)]
+
+If we summate all the costs:
+
+latexmath:[O\left( P^2 log_2(P) + \frac{n}{P} log_2(P) + \frac{n}{P} log_2(P) + 1 + \frac{n}{P} \right) = O\left( \frac{n}{P}(1 + \frac{1}{P^2}log_2(nP)) \right) = O(\frac{n}{P})]
+
+Now, we have effectively reduced the time-complexity to latexmath:[t = \frac{n}{P}] where latexmath:[log_2(n) < t < n].
+
+== Core level
+SIMD
+MIMD
+
+Different processor instructions takes different amounts of CPU clock cycles and hence different costs based on the data types that are being manipulated.
+So, there is scope for optimization of the number of operations.
+For example, reducing number of floating multiplications by factorization.
+Nowadays, all of these are directly performed within the compiler.
+Moreover, if same operation needs to be applied on bunch of data whose results are independent, we can fetch them together and vectorize them  on a larger registers and apply the same fetched instruction in parallel on all of them.
+Hence, SIMD reduces the number of fetches in the pipeline and brings performance benefits.
+
+== Chip level
+Declarative: OpenMP
+Imperative: std::thread, pthreads
+Library based: Intel TBB/MS PPL
+
+== Machine level
+MPI
+
+== Custom hardware
+GPGPU(General Purpose computation on GPU), Hardware accelerators(Intel Xeon Phi), ASIC/FPGA architectures
+
+== Performance evaluation
+
+Parallel Sorting: 99
+Topology of Interconnection of Networks: 63
+Parallel Linear Algebra: 121

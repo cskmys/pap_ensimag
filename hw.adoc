@@ -38,6 +38,7 @@ Without restricting ourselves to any specific parallel programming paradigms men
 In the following section, we'll do a comparative theoretical analysis(in terms of time complexity) of how parallelization can improve the performance of sorting algorithms.
 After that, we will do the same with few parallel algorithms related to linear algebra.
 
+<<<
 
 == Parallel Sorting Algorithms
 
@@ -95,12 +96,14 @@ If we use too less, then we are not exploiting the full potential of available r
 
 Hence, it's all about finding that "sweet" spot.
 
+<<<
+
 === Parallel Merge Sort
 This is quite similar to the sequential merge sort. The tree structure of the algorithm, makes the distribution of the work between processes fairly simple.
 This is illustrated in the figure below footnote:[source: R Rocha and F Silva (DCC-FCUP)]:
 
 .Parallel Merge Sort
-image::./pmsort.png[Parallel Merge Sort]
+image::./pmsort.png[Parallel Merge Sort, 512]
 
 ==== Complexity analysis
 
@@ -143,6 +146,8 @@ latexmath:[O\left( \sum_{i=1}^{log_2(n)}( 2^i ) \right) = O(n)]
 
 Therefore, we see a huge gain, wherein a relatively complex operation such as sorting is reduced to time complexity of a simpler operation such as, for example, say linear search.
 
+<<<
+
 === Parallel Bubble Sort
 
 A classic serial bubble sort, sorts the array by iteratively moving elements to their respective positions in relation to the end of the in each phase.
@@ -151,7 +156,7 @@ In parallel bubble sort the idea is to overlap multiple phases in such a way tha
 Considering the sequence of bubble sort, to achieve this, we need to pipeline the phases in the following manner footnote:[source: Clayton S Ferner, UNC Wilmington, Barry Wilkinson, UNC Charlotte]:
 
 .Parallel Bubble Sort
-image::pbub.png[Parallel Bubble Sort]
+image::pbub.png[Parallel Bubble Sort, 512]
 
 ==== Complexity analysis
 In serial bubble sort, latexmath:[i^{th}] phase requires latexmath:[n - i] iterations and we'll have latexmath:[n - 1] such phases.
@@ -169,6 +174,8 @@ Hence, the end time of the algorithm and hence complexity is:
 latexmath:[O\left( n - 1 + n - 1 \right) = O\left( 2n - 2 \right) = O\left( n \right)]
 
 Hence, we have reduce complexity from latexmath:[n^2] to latexmath:[n].
+
+<<<
 
 === Parallel Sort Regular Sampling
 
@@ -192,7 +199,7 @@ latexmath:[0, \frac{n}{P^2}, \frac{2n}{P^2}, ..., \frac{(P-1)n}{P^2}]
 To illustrate with an example footnote:[source: Introduction to HPC with MPI for Data Science by Frank Nielsen]:
 
 .Parallel Sort Regular Sampling
-image::psrs.png[Parallel Sort Regular Sampling]
+image::psrs.png[Parallel Sort Regular Sampling, 580]
 
 In short, the intuition is: Sort locally and strategically share with each other parts of locally sorted array using some reference pivots selected among sorted samples.
 
@@ -220,6 +227,8 @@ If we summate all the costs:
 latexmath:[O\left( P^2 log_2(P) + \frac{n}{P} log_2(P) + \frac{n}{P} log_2(P) + 1 + \frac{n}{P} \right) = O\left( \frac{n}{P}(1 + \frac{1}{P^2}log_2(nP)) \right) = O(\frac{n}{P})]
 
 Now, we have effectively reduced the time-complexity to latexmath:[t = \frac{n}{P}] where latexmath:[log_2(n) < t < n].
+
+<<<
 
 == Parallel Linear Algebra
 
@@ -249,37 +258,37 @@ Since, computations of each of the element in the result are independent we have
 If the size of the matrices can be accommodated within a RAM of a single machine, we can use a framework like OpenMP and achieve speed-up via shared-memory models.
 However, if the order of the inputs are so large that they need to be distributed across machines, then we will need to use distributed algorithms.
 
+<<<
+
 === Parallel Matrix Multiplication on distributed system
 The algorithm consists of:
 
 * Division of 3 matrices over the processes based on the rows i,e, each process is assigned latexmath:[\frac{n}{P}] rows.
 +
 .Data allocation footnote:[source: Arnaud Legrand, LIG, Grenoble]
-image::ringdatadist.png[Data allocation]
+image::ringdatadist.png[Data allocation, 320]
 * In each iteration, every process perform matrix multiplication on it's local sub-matrix
 +
 .Local sub-matrix multiplication footnote:[source: Arnaud Legrand, LIG, Grenoble]
-image::distlocsubmatmul.png[Local sub-matrix multiplication]
+image::distlocsubmatmul.png[Local sub-matrix multiplication, 320]
 * A virtual ring is formed in order to rotate rows between processes i,e, a process sends rows of B to the next process and receives rows of B from the previous process in the virtual ring.
 +
-.Virtual ring to pass rows footnote:[source: Arnaud Legrand, LIG, Grenoble]
-image::distmatmulring.png[Virtual ring to pass rows]
+.Virtual ring to pass rows footnote:[source: Arnaud Legrand, LIG, Grenoble, 320]
+image::distmatmulring.png[Virtual ring to pass rows, 320]
 * While the rows are rotated, the corresponding diagonals are rotated within each of the processes.
 
 The algorithm is illustrated below :
 
 .Stage 0 footnote:[source: Ned Nedialkov, McMaster University, Canada]
-image::distalgos0.png[Stage 0]
+image::distalgos0.png[Stage 0, 480]
 
 .Stage 1 footnote:[source: Ned Nedialkov, McMaster University, Canada]
-image::distalgos1.png[Stage 1]
+image::distalgos1.png[Stage 1, 460]
 
 .Stage 2 footnote:[source: Ned Nedialkov, McMaster University, Canada]
-image::distalgos2.png[Stage 2]
+image::distalgos2.png[Stage 2, 460]
 
 ==== Complexity analysis
-As we saw from the example,
-
 * There are latexmath:[P] steps.
 * Each step takes time:
 +
@@ -288,24 +297,25 @@ latexmath:[max(nr^2w, L + nrb)]
 +
 latexmath:[P ( max(nr^2w, L + \frac{nr}{b})) = max(\frac{wn^3}{P}, L + P(\frac{n}{b}))]
 
-There are 2 things to note here:
+There are 2 interesting things to note here:
 
 * Big O
 +
 latexmath:[O\left( max(\frac{wn^3}{P}, L + P(\frac{n}{b})) \right) = O\left( \frac{wn^3}{P} \right)]
-* Comparision with Matrix vector complexity:
+* Comparision with Vector Matrix Multiplication complexity(using same algorithm):
 +
 latexmath:[P ( max(nr^2w, nL + \frac{nr}{b}))]
 +
-is the running time of matrix vector multiplication using the same algorithm.
 Hence, by reduction in factor latexmath:[n], we have saved network latencies!
+
+<<<
 
 === Parallel Matrix Multiplication within a system
 Compared to the distributed version, this is fairly simple.
 For the conventional triple nested for loop of sequential matrix multiplication:
 
 .Serial Matrix Multiplication footnote:[source: Tristan Vanderbruggen & John Cavazos, University of Delaware]
-image::sermat.png[Serial Matrix Multiplication]
+image::sermat.png[Serial Matrix Multiplication, 280]
 
 To achieve speed-up all we need to do is:
 
@@ -316,10 +326,10 @@ To achieve speed-up all we need to do is:
 All the above can be accomplished in just 2 lines of code with OpenMP footnote:[source: Tristan Vanderbruggen & John Cavazos, University of Delaware]:
 
 .Parallel Matrix Multiplication OpenMP
-image::openmpmatmul.png[Parallel Matrix Multiplication OpenMP]
+image::openmpmatmul.png[Parallel Matrix Multiplication OpenMP, 370]
 
 ==== Complexity analysis
-The serial matrix multiplication as we can see contains 3 nested for loops, each iterating for say, latexmath:[n] dimension.
+The serial matrix multiplication as we can see contains 3 nested for loops.
 Then time complexity:
 
 latexmath:[O\left( n^3 \right)]

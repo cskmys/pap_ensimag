@@ -1,6 +1,8 @@
 = Parallel Algorithms and Applications Homework Assignment
 :author: Chakka Karthik Subramanyam
 :doctype: article
+:stylesheet: notebook.css
+
 
 == Parallel Algorithms
 
@@ -47,23 +49,23 @@ set of n real numbers stored in an array of:
 
 latexmath:[X[ \] = X[0\], X[1\], .... , X[n-1\]]
 
-For *n* elements, there are *n!* ways that they can be arranged.
-The goal is to find 1 permutation out of the *n!* that abides to our desired order.
+For latexmath:[n] elements, there are latexmath:[n!] ways that they can be arranged.
+The goal is to find 1 permutation out of the latexmath:[n!] that abides to our desired order.
 
 Below is the time complexity(Big O) of some of the conventional sequential sorting algorithms.
 |===
 |Name |Complexity(O(..)) |Comments
 
 |Bubblesort
-|n^2^
+|latexmath:[n^2]
 |Propagates the largest element towards the end of the array in each iteration
 
 |Quicksort
-|n log~2~(n)
+|latexmath:[n log_2(n)]
 |Recursive algorithm that sorts across a randomly chosen pivot
 
 |Mergesort
-|n log~2~(n)
+|latexmath:[n log_2(n)]
 |Divide and conquer algorithm that divides the array into smallest terminal units, and merges them back while sorting
 
 |===
@@ -72,11 +74,11 @@ In the following sections we introduce various parallel sorting algorithms which
 We theoretically, evaluate the performance gains for each.
 Some of the assumptions that we make:
 
-* For *P* processes, all data are already allocated and can be denoted by
+* For latexmath:[P] processes, all data are already allocated
 * All data are to be sorted in ascending order
-* The number of processes *P*, is in powers of 2.
+* The number of processes latexmath:[P], is in powers of 2.
 
-It's important to note that the best possible for a serial algorithm is:
+It's important to note that the best possible time complexity for a serial algorithm is:
 
 latexmath:[O\left( n log_2(n) \right)]
 
@@ -108,27 +110,27 @@ For any merge sort, in the worst case:
 +
 latexmath:[2s - 1]
 +
-where s is the size of the sublist:
+where latexmath:[s] is the size of the sublist:
 +
 latexmath:[s = 2^{i-1}]
 +
-where i is the i^th^ iteration.
+where latexmath:[i] is the latexmath:[i^{th}] iteration.
 
 * At any given step, number of sub-lists:
 +
 asciimath:[(n/s) = (n/2^(i-1))]
 +
-where n is the total number of elements
+where latexmath:[n] is the total number of elements
 
 * Number of steps in total:
 +
 latexmath:[log_2(n)]
 
-In serial merge sort the time complexity for i^th^ step is:
+In serial merge sort, the time complexity for latexmath:[i^{th}] step is:
 
 latexmath:[ O\left( (\frac{n}{2^i}) (2^i - 1) \right) = O\left( n \right)]
 
-Whereas in parallel merge sort the the time complexity for i^th^ step is:
+Whereas in parallel merge sort the the time complexity for latexmath:[i^{th}] step is:
 
 latexmath:[ O\left( 2^i - 1 \right) = O\left(2^i\right)]
 
@@ -143,10 +145,10 @@ Therefore, we see a huge gain, wherein a relatively complex operation such as so
 
 === Parallel Bubble Sort
 
-A classic serial bubble sort sort the array by iteratively moving elements to their respective positions in relation to the end of the in each phase.
+A classic serial bubble sort, sorts the array by iteratively moving elements to their respective positions in relation to the end of the in each phase.
 
 In parallel bubble sort the idea is to overlap multiple phases in such a way that the newly started phase doesn't disturb an on-going phase.
-Considering the sequence of bubble sort, to achieve this, we need to pipeline the sort in the following manner footnote:[source: Clayton S Ferner, UNC Wilmington, Barry Wilkinson, UNC Charlotte]:
+Considering the sequence of bubble sort, to achieve this, we need to pipeline the phases in the following manner footnote:[source: Clayton S Ferner, UNC Wilmington, Barry Wilkinson, UNC Charlotte]:
 
 .Parallel Bubble Sort
 image::pbub.png[Parallel Bubble Sort]
@@ -171,7 +173,7 @@ Hence, we have reduce complexity from latexmath:[n^2] to latexmath:[n].
 === Parallel Sort Regular Sampling
 
 In this algorithm we can relax our last initial assumption.
-Now latexmath:[P] need not be in powers of 2, it can be any arbitrary natural number.
+Now latexmath:[P] need not be in powers of latexmath:[2], it can be any arbitrary natural number.
 The algorithm is as follows:
 
 * Sort local array using any algorithm.
@@ -226,14 +228,14 @@ The most popular in the recent years is data science and machine learning.
 Simple linear algebraic operations such as dot product of 2 vectors, matrix-vector & matrix-matrix multiplication are the major types of operations performed in these domains.
 For ex:
 
-* To evaluate the performance of in machine learning, loss functions is used. It is nothing but a multi-dimensional root mean square operation.
-* Back-propagation algorithm effectively is recursive dot product of derivatives across multiple layers in neural nets.
+* To evaluate the performance of model in machine learning, loss functions is used. It is nothing but a multi-dimensional root mean square operation.
+* Back-propagation algorithm effectively is recursive dot product of partial derivatives across multiple layers in neural nets.
 
-Though, the operations are simple, the scale at which they are performed are unprecedented.
-For example: a simple 'hello world' introduction into deep learning involves a model that requires several 256*256 matrix multiplications in one iteration of training.
+Though, the operations are simple, the scale at which they are performed is unprecedented.
+For example: a simple 'hello world' introduction(MNIST digit recognition) into deep learning involves a model that requires several 256*256 matrix multiplications in one iteration of training.
 Hence, both these domains are space and computation hungry.
 With more and more industries adopting these technologies, more avenues in high performance computing are being explored to perform these operations in practical time scales.
-Parallel algorithms provide the foundation on which makes all these are practically possible/feasible.
+Parallel algorithms provide the foundation which makes all these are practically possible/feasible.
 
 Here we will consider 2 parallel Matrix-Matrix multiplication algorithms.
 
@@ -296,7 +298,7 @@ latexmath:[O\left( max(\frac{wn^3}{P}, L + P(\frac{n}{b})) \right) = O\left( \fr
 latexmath:[P ( max(nr^2w, nL + \frac{nr}{b}))]
 +
 is the running time of matrix vector multiplication using the same algorithm.
-Hence, by reduction in factor of we have saved network latencies!
+Hence, by reduction in factor latexmath:[n], we have saved network latencies!
 
 === Parallel Matrix Multiplication within a system
 Compared to the distributed version, this is fairly simple.
@@ -319,8 +321,10 @@ image::openmpmatmul.png[Parallel Matrix Multiplication OpenMP]
 ==== Complexity analysis
 The serial matrix multiplication as we can see contains 3 nested for loops, each iterating for say, latexmath:[n] dimension.
 Then time complexity:
+
 latexmath:[O\left( n^3 \right)]
 
 If we assume the OpenMP directives create latexmath:[P] threads which would vectorize the for loop.
 Then time complexity:
+
 latexmath:[O\left( \frac{n^3}{P} \right)]

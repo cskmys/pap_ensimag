@@ -1,25 +1,14 @@
-= PAP
+= Parallel Algorithms and Applications Homework Assignment
 :author: Chakka Karthik Subramanyam
 :doctype: article
 
-== Why do we need parallel computing?
-
-Some of motivations towards exploring parallel computing solutions are:
-
-* Computation
-** There could be large number of iterations
-** The algorithm may take a too long of a time to converge
-* Data
-** The memory consumed maybe too large than what can be accommodated by conventional PC RAM.
-** Output can be too big and may take forever to save/transfer.
-
-Moreover, a *big* application can hoard all the resources and cause other applications running on the machine to starve.
+== Parallel Algorithms
 
 Thanks to Moore's law, the conventional wisdom, suggested to wait for newer generation of processors to get more processing power.
 However, we have reached a point, wherein we can't get more processing power by just increasing frequency, so manufacturers are pushed to increase the number of cores, to derive processing power.
 Hence, the need to have exposure into parallel computing is more now than ever before.
 
-Parallel computing though is the way forward, it's not a magic solution. It comes with it's own range of caveats and problems.
+Parallel computing though is the way forward, it's not a magic solution. It comes with it's own range of caveats and quirks.
 For example,
 
 * How will you divide the data between units?
@@ -27,28 +16,26 @@ For example,
 * How are the dependencies between data/results handled?
 * How to synchronize various parallel units?
 * How reconstruction of the results of individual units occur?
-* How will you modify your conventional(serial) algorithms to exploit parallelism? etc.
 
-With the advent of big data and IOT, parallel computing has an ever increasing number of applications in various domains in industry and research.
-For ex:
+Parallel algorithms answer the above questions(and hardware implementations and firmware/software framework apis enable the same).
+Without having proper answers for the above questions, having more cores is not going to be of much use.
+Hence, we can say that the parallel algorithms is the secret sauce that has realized high performance computing across domains.
 
-* Data analysis
-* Numerical simulations
-* AI
-* Graphics and motion pictures etc.
+Moreover, Parallelism is not restricted just to multiple processors running on a chip, it can happen at multiple levels:
 
-The people who are working in this domain to provide foundations for much of the applications described above are the unsung heroes who have made all these possible!
-
-Parallelism is not restricted just to multiple processors running on a chip, it can happen at multiple levels:
-
-* Between Instructions/Data on a single core
-* Processors on a single chip
-* Machines/Cluster of machines on a network
-* Custom hardware
+* Between Instructions/Data on a single core. Ex: SIMD compiler Intrinsics
+* Processors on a single chip. Ex: OpenMP, pthreads
+* Machines/Cluster of machines on a network. Ex: MPI
+* Custom/Specialized hardware. Ex: Programming GPGPUs, hardware accelerators etc.
 
 There can also be hybrid solutions that can mix and match various architectures mentioned above.
+Just like hardware adapt to various needs, the algorithms will need to adapt as well to make best use of hardware and other resources.
 
-In the following section, we'll see a simple case of sorting done across various paradigms.
+Without restricting ourselves to any specific parallel programming paradigms mentioned above, we'll provide a general idea which can be implemented across multiple paradigms(unless explicitly specified otherwise).
+
+In the following section, we'll do a comparative theoretical analysis(in terms of time complexity) of how parallelization can improve the performance of sorting algorithms.
+After that, we will do the same with few parallel algorithms related to linear algebra.
+
 
 == Parallel Sorting Algorithms
 
@@ -108,9 +95,10 @@ Hence, it's all about finding that "sweet" spot.
 
 === Parallel Merge Sort
 This is quite similar to the sequential merge sort. The tree structure of the algorithm, makes the distribution of the work between processes fairly simple.
-This is illustrated in the figure below footnote:[source: https://www.dcc.fc.up.pt/~ricroc/aulas/1516/cp/apontamentos/slides_sorting.pdf]:
+This is illustrated in the figure below footnote:[source: R Rocha and F Silva (DCC-FCUP)]:
 
-image::./pmsort.png[]
+.Parallel Merge Sort
+image::./pmsort.png[Parallel Merge Sort]
 
 ==== Complexity analysis
 
@@ -160,7 +148,8 @@ A classic serial bubble sort sort the array by iteratively moving elements to th
 In parallel bubble sort the idea is to overlap multiple phases in such a way that the newly started phase doesn't disturb an on-going phase.
 Considering the sequence of bubble sort, to achieve this, we need to pipeline the sort in the following manner footnote:[source: Clayton S Ferner, UNC Wilmington, Barry Wilkinson, UNC Charlotte]:
 
-image::pbub.png[]
+.Parallel Bubble Sort
+image::pbub.png[Parallel Bubble Sort]
 
 ==== Complexity analysis
 In serial bubble sort, latexmath:[i^{th}] phase requires latexmath:[n - i] iterations and we'll have latexmath:[n - 1] such phases.
@@ -200,7 +189,8 @@ latexmath:[0, \frac{n}{P^2}, \frac{2n}{P^2}, ..., \frac{(P-1)n}{P^2}]
 
 To illustrate with an example footnote:[source: Introduction to HPC with MPI for Data Science by Frank Nielsen]:
 
-image::psrs.png[]
+.Parallel Sort Regular Sampling
+image::psrs.png[Parallel Sort Regular Sampling]
 
 In short, the intuition is: Sort locally and strategically share with each other parts of locally sorted array using some reference pivots selected among sorted samples.
 
@@ -229,30 +219,108 @@ latexmath:[O\left( P^2 log_2(P) + \frac{n}{P} log_2(P) + \frac{n}{P} log_2(P) + 
 
 Now, we have effectively reduced the time-complexity to latexmath:[t = \frac{n}{P}] where latexmath:[log_2(n) < t < n].
 
-== Core level
-SIMD
-MIMD
+== Parallel Linear Algebra
 
-Different processor instructions takes different amounts of CPU clock cycles and hence different costs based on the data types that are being manipulated.
-So, there is scope for optimization of the number of operations.
-For example, reducing number of floating multiplications by factorization.
-Nowadays, all of these are directly performed within the compiler.
-Moreover, if same operation needs to be applied on bunch of data whose results are independent, we can fetch them together and vectorize them  on a larger registers and apply the same fetched instruction in parallel on all of them.
-Hence, SIMD reduces the number of fetches in the pipeline and brings performance benefits.
+In computer science, linear algebra plays a dominant role in many domains.
+The most popular in the recent years is data science and machine learning.
+Simple linear algebraic operations such as dot product of 2 vectors, matrix-vector & matrix-matrix multiplication are the major types of operations performed in these domains.
+For ex:
 
-== Chip level
-Declarative: OpenMP
-Imperative: std::thread, pthreads
-Library based: Intel TBB/MS PPL
+* To evaluate the performance of in machine learning, loss functions is used. It is nothing but a multi-dimensional root mean square operation.
+* Back-propagation algorithm effectively is recursive dot product of derivatives across multiple layers in neural nets.
 
-== Machine level
-MPI
+Though, the operations are simple, the scale at which they are performed are unprecedented.
+For example: a simple 'hello world' introduction into deep learning involves a model that requires several 256*256 matrix multiplications in one iteration of training.
+Hence, both these domains are space and computation hungry.
+With more and more industries adopting these technologies, more avenues in high performance computing are being explored to perform these operations in practical time scales.
+Parallel algorithms provide the foundation on which makes all these are practically possible/feasible.
 
-== Custom hardware
-GPGPU(General Purpose computation on GPU), Hardware accelerators(Intel Xeon Phi), ASIC/FPGA architectures
+Here we will consider 2 parallel Matrix-Matrix multiplication algorithms.
 
-== Performance evaluation
+The conventional serial matrix multiplication has time complexity of:
 
-Parallel Sorting: 99
-Topology of Interconnection of Networks: 63
-Parallel Linear Algebra: 121
+latexmath:[O\left( n^3 \right)]
+
+Though the order is in polynomial time, the scale at which this has to be executed, makes it totally impractical to use a naive serial algorithm.
+
+Since, computations of each of the element in the result are independent we have good scope for parallelization.
+If the size of the matrices can be accommodated within a RAM of a single machine, we can use a framework like OpenMP and achieve speed-up via shared-memory models.
+However, if the order of the inputs are so large that they need to be distributed across machines, then we will need to use distributed algorithms.
+
+=== Parallel Matrix Multiplication on distributed system
+The algorithm consists of:
+
+* Division of 3 matrices over the processes based on the rows i,e, each process is assigned latexmath:[\frac{n}{P}] rows.
++
+.Data allocation footnote:[source: Arnaud Legrand, LIG, Grenoble]
+image::ringdatadist.png[Data allocation]
+* In each iteration, every process perform matrix multiplication on it's local sub-matrix
++
+.Local sub-matrix multiplication footnote:[source: Arnaud Legrand, LIG, Grenoble]
+image::distlocsubmatmul.png[Local sub-matrix multiplication]
+* A virtual ring is formed in order to rotate rows between processes i,e, a process sends rows of B to the next process and receives rows of B from the previous process in the virtual ring.
++
+.Virtual ring to pass rows footnote:[source: Arnaud Legrand, LIG, Grenoble]
+image::distmatmulring.png[Virtual ring to pass rows]
+* While the rows are rotated, the corresponding diagonals are rotated within each of the processes.
+
+The algorithm is illustrated below :
+
+.Stage 0 footnote:[source: Ned Nedialkov, McMaster University, Canada]
+image::distalgos0.png[Stage 0]
+
+.Stage 1 footnote:[source: Ned Nedialkov, McMaster University, Canada]
+image::distalgos1.png[Stage 1]
+
+.Stage 2 footnote:[source: Ned Nedialkov, McMaster University, Canada]
+image::distalgos2.png[Stage 2]
+
+==== Complexity analysis
+As we saw from the example,
+
+* There are latexmath:[P] steps.
+* Each step takes time:
++
+latexmath:[max(nr^2w, L + nrb)]
+* Hence, running time:
++
+latexmath:[P ( max(nr^2w, L + \frac{nr}{b})) = max(\frac{wn^3}{P}, L + P(\frac{n}{b}))]
+
+There are 2 things to note here:
+
+* Big O
++
+latexmath:[O\left( max(\frac{wn^3}{P}, L + P(\frac{n}{b})) \right) = O\left( \frac{wn^3}{P} \right)]
+* Comparision with Matrix vector complexity:
++
+latexmath:[P ( max(nr^2w, nL + \frac{nr}{b}))]
++
+is the running time of matrix vector multiplication using the same algorithm.
+Hence, by reduction in factor of we have saved network latencies!
+
+=== Parallel Matrix Multiplication within a system
+Compared to the distributed version, this is fairly simple.
+For the conventional triple nested for loop of sequential matrix multiplication:
+
+.Serial Matrix Multiplication footnote:[source: Tristan Vanderbruggen & John Cavazos, University of Delaware]
+image::sermat.png[Serial Matrix Multiplication]
+
+To achieve speed-up all we need to do is:
+
+* fork as many threads as possible
+* let threads share the matrices A, B, and C
+* but make sure that the each thread has it's own iterators
+
+All the above can be accomplished in just 2 lines of code with OpenMP footnote:[source: Tristan Vanderbruggen & John Cavazos, University of Delaware]:
+
+.Parallel Matrix Multiplication OpenMP
+image::openmpmatmul.png[Parallel Matrix Multiplication OpenMP]
+
+==== Complexity analysis
+The serial matrix multiplication as we can see contains 3 nested for loops, each iterating for say, latexmath:[n] dimension.
+Then time complexity:
+latexmath:[O\left( n^3 \right)]
+
+If we assume the OpenMP directives create latexmath:[P] threads which would vectorize the for loop.
+Then time complexity:
+latexmath:[O\left( \frac{n^3}{P} \right)]
